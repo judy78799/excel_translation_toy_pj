@@ -48,7 +48,7 @@ async def upload_and_translate(
         # Try to find the column by name or use the first column if not found?
         # Frontend defaults to 'text'
         try:
-            texts = parser.get_column_data(column_name=text_column)
+            texts = parser.get_column_data(column_name=text_column) # 이 새끼가 범인임.
         except ValueError:
             # If column name lookup fails, try index 0 or raise clearer error
             # For now, let's try to get column by index 0 as fallback if text_column is generic
@@ -68,8 +68,16 @@ async def upload_and_translate(
             # OR assume parser works.
             # Let's use pandas as in the user's snippet in Step 71.
             import pandas as pd
-            df = pd.read_excel(metadata.file_path) if file_extension in ['.xlsx', '.xls'] else pd.read_csv(metadata.file_path, encoding="utf-8-sig") # Pandas가 엑셀 파일을 열어서 메모리 상의 표인 DataFrame으로 변환함.
-            
+             # Pandas가 엑셀 파일을 열어서 메모리 상의 표인 DataFrame으로 변환함.
+            # df = pd.read_excel(metadata.file_path) if file_extension in ['.xlsx', '.xls'] else pd.read_csv(metadata.file_path, encoding="utf-8-sig")
+            if file_extension in ['.xlsx', '.xls']:
+                df = pd.read_excel(metadata.file_path)
+            else:
+                try:
+                    df = pd.read_csv(metadata.file_path, encoding="utf-8-sig")
+                except UnicodeDecodeError:
+                    df = pd.read_csv(metadata.file_path, encoding="cp949")
+                    
             if text_column not in df.columns:
                 # If column not found, and maybe user didn't specify one?
                 # If dataframe has columns, use the first one as fallback if single column?
