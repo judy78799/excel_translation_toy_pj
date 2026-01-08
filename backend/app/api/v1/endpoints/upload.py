@@ -68,14 +68,14 @@ async def upload_and_translate(
             # OR assume parser works.
             # Let's use pandas as in the user's snippet in Step 71.
             import pandas as pd
-            df = pd.read_excel(metadata.file_path) if file_extension in ['.xlsx', '.xls'] else pd.read_csv(metadata.file_path) # Pandas 데이터 처리(byte)
+            df = pd.read_excel(metadata.file_path) if file_extension in ['.xlsx', '.xls'] else pd.read_csv(metadata.file_path, encoding="utf-8-sig") # Pandas가 엑셀 파일을 열어서 메모리 상의 표인 DataFrame으로 변환함.
             
             if text_column not in df.columns:
                 # If column not found, and maybe user didn't specify one?
                 # If dataframe has columns, use the first one as fallback if single column?
                  raise HTTPException(status_code=400, detail=f"Column '{text_column}' not found in file. Available columns: {list(df.columns)}")
             
-            texts = df[text_column].astype(str).tolist()
+            texts = df[text_column].astype(str).tolist() # Pandas 사용자가 지정한 컬럼만 쏙 뽑아서 "파이썬 리스트"로 만듦. 
 
         # 4. Translate
         if not texts:
