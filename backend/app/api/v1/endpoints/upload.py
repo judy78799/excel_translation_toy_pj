@@ -75,7 +75,18 @@ async def upload_and_translate(
                 # If dataframe has columns, use the first one as fallback if single column?
                  raise HTTPException(status_code=400, detail=f"Column '{text_column}' not found in file. Available columns: {list(df.columns)}")
             
-            texts = df[text_column].astype(str).tolist() # Pandas 사용자가 지정한 컬럼만 쏙 뽑아서 "파이썬 리스트"로 만듦. 
+            # Pandas 사용자가 지정한 컬럼만 쏙 뽑아서 "파이썬 리스트"로 만듦. 
+            # 리스트 값이 전부 NAN 일 경우 번역 API에서 터질 수 있으므로 코드 수정 + 방어 코드
+            texts = (
+                df[text_column]
+                .dropna()
+                .astype(str)
+                .str.strip()
+                .tolist()
+            )
+
+            if not texts:
+                raise HTTPException(status_code=400, detail="No valid text rows found")
 
         # 4. Translate
         if not texts:
