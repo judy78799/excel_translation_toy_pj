@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import styled from 'styled-components';
 import { FileUpload } from '../components/FileUpload/FileUpload';
 import { ResultTable } from '../components/ResultTable/ResultTable';
-import { Alert } from '../components/Alert';
 import { useFileUpload } from '../hooks/useFileUpload';
 import { useTranslation } from '../hooks/useTranslation';
 
