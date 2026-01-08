@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     
     # API configuration
     API_V1_PREFIX: str = "/api/v1"
+    PROJECT_NAME: str = "Translation API"
+    VERSION: str = "1.0.0"
     
     # CORS settings
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
