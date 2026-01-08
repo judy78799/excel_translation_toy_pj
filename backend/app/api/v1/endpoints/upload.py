@@ -94,9 +94,11 @@ async def upload_and_translate(
 
         # Use existing translate_texts method
         # It returns List[TranslationItem] with original, translated, source_lang, target_lang
-        translation_items = await translation_service.translate_texts(
-             texts, source_lang, target_lang
-        )
+        try:
+            translation_items = await translation_service.translate_texts(texts, source_lang, target_lang)
+        except Exception as e:
+            logger.exception("Translation failed")
+            raise HTTPException(status_code=502, detail="Translation service failed")
         
         # 5. Convert to TranslationResult for response (adds source_lang/target_lang)
         results = [
