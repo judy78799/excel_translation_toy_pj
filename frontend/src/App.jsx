@@ -122,7 +122,7 @@ export default function App() {
                 </div>
 
                 <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-600">
                         <Upload className="w-5 h-5" />
                         파일 업로드
                     </h2>
@@ -135,7 +135,7 @@ export default function App() {
                             <select
                                 value={sourceLang}
                                 onChange={(e) => setSourceLang(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-600"
                             >
                                 {LANGUAGES.map(lang => (
                                     <option key={lang.code} value={lang.code}>{lang.name}</option>
@@ -150,7 +150,7 @@ export default function App() {
                             <select
                                 value={targetLang}
                                 onChange={(e) => setTargetLang(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-600"
                             >
                                 {LANGUAGES.map(lang => (
                                     <option key={lang.code} value={lang.code}>{lang.name}</option>
@@ -167,7 +167,7 @@ export default function App() {
                                 value={columnName}
                                 onChange={(e) => setColumnName(e.target.value)}
                                 placeholder="text"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-600"
                             />
                         </div>
                     </div>
