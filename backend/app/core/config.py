@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # Translation API settings
     TRANSLATION_API_KEY: str = ""  # Set in .env file for real API
     TRANSLATION_API_URL: str = "https://translation.googleapis.com/language/translate/v2"
-    USE_MOCK_TRANSLATION: bool = True  # Set to False when using real API
+    USE_MOCK_TRANSLATION: bool = False  # Set to False when using real API
     
     # Supported languages
     SUPPORTED_LANGUAGES: List[str] = ["en", "ko", "ja", "zh", "es", "fr", "de"]
