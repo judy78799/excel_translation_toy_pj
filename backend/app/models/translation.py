@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-
+# 텍스트 리스트를 받아서 빈 칸 필터링 후, 외부 번역 API를 호출하여 번역된 결과를 받아옴.
+# 이후 번역된 테스트를 원래 순서에 맞게 다시 끼워 맞츰
 class TranslationRequest(BaseModel):
     """Request model for translation"""
     texts: List[str] = Field(..., description="List of texts to translate")

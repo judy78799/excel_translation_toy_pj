@@ -7,8 +7,9 @@ from app.models.translation import (
 from app.services.translation_service import TranslationService
 from app.services.external_api_service import ExternalAPIService
 from app.services.file_service import FileService
-from app.utils.file_parser import ExcelParser
 from app.core.config import settings
+from pathlib import Path
+import pandas as pd
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ translation_service = TranslationService(api_service)
 file_service = FileService()
 
 
-@router.post("/", response_model=TranslationResponse)
+@router.post("", response_model=TranslationResponse)
 async def translate_texts(request: TranslationRequest):
     """
     Translate a list of texts
@@ -95,14 +96,35 @@ async def translate_excel_column(request: ExcelTranslationRequest):
         # Get file metadata
         metadata = file_service.get_file_metadata(request.file_id)
         
-        # Parse Excel file
-        parser = ExcelParser(metadata.file_path)
+        # Parse Excel/CSV file using Pandas
+        file_path = metadata.file_path
+        file_extension = Path(file_path).suffix
         
-        # Get column data
-        column_data = parser.get_column_data(
-            column_index=request.column_index,
-            sheet_name=request.sheet_name
+        if file_extension in ['.xlsx', '.xls']:
+            # Load specific sheet if requested, otherwise first sheet (default)
+            sheet_name = request.sheet_name if request.sheet_name else 0 
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+        else:
+            try:
+                df = pd.read_csv(file_path, encoding='utf-8-sig')
+            except UnicodeDecodeError:
+                df = pd.read_csv(file_path, encoding='cp949')
+        
+        # Get column data by index
+        if request.column_index < 0 or request.column_index >= len(df.columns):
+             raise HTTPException(status_code=400, detail=f"Column index {request.column_index} out of range. Max index: {len(df.columns) - 1}")
+
+        # Extract column data, handling NaN/empty values
+        column_data = (
+            df.iloc[:, request.column_index]
+            .dropna()
+            .astype(str)
+            .str.strip()
+            .tolist()
         )
+        
+        if not column_data:
+             raise HTTPException(status_code=400, detail="Selected column is empty")
         
         # Translate column
         results = await translation_service.translate_excel_column(

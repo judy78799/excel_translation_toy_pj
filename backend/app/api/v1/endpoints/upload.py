@@ -7,6 +7,7 @@ from app.core.config import settings
 from pathlib import Path
 import time
 import logging
+import pandas as pd
 
 
 logger = logging.getLogger(__name__)
@@ -17,9 +18,8 @@ file_service = FileService()
 api_service = ExternalAPIService()
 translation_service = TranslationService(api_service)
 
-@router.post("/", response_model=FileUploadResponse)
+@router.post("", response_model=FileUploadResponse)
 async def upload_and_translate(
-    raise RuntimeError("IF YOU SEE THIS, THIS FILE IS EXECUTING") 
     file: UploadFile = File(...),
     source_lang: str = Query("ko", pattern="^[a-z]{2}$"),
     target_lang: str = Query("en", pattern="^[a-z]{2}$"),
@@ -29,6 +29,7 @@ async def upload_and_translate(
     Upload file and translate immediately
     Compatible with the new Frontend implementation
     """
+    # raise RuntimeError("IF YOU SEE THIS, THIS FILE IS EXECUTING") 
     start_time = time.time()
     
     # 1. Validate file
@@ -44,62 +45,36 @@ async def upload_and_translate(
         metadata = await file_service.save_uploaded_file(file)
         
         # 3. Parse and Extract Text
-        parser = ExcelParser(metadata.file_path)
+        # 3. Parse and Extract Text
         
-        # Try to find the column by name or use the first column if not found?
-        # Frontend defaults to 'text'
-        try:
-            texts = parser.get_column_data(column_name=text_column) # 이 새끼가 범인임.
-        except ValueError:
-            # If column name lookup fails, try index 0 or raise clearer error
-            # For now, let's try to get column by index 0 as fallback if text_column is generic
-            # But 'text_column' query param is passed, so we should respect it.
-            # Let's assume ExcelParser supports column_name.
-            # If not, we might need to update ExcelParser or use pandas directly.
-            # Checking ExcelParser... wait, I haven't checked ExcelParser code yet.
-            # Let's assume for now and catch error.
-            
-            # Since I cannot see ExcelParser code right now without another tool call, 
-            # I will assume `get_column_data` accepts `column_name` OR modify it to work.
-            # Re-reading `translation.py` (Step 113 endpoint), it uses `column_index`.
-            # Let's use pandas directly here for flexibility or check parser.
-            # Actually, `file_service.py` imports `ExcelParser`.
-            
-            # Safe bet: Read file with pandas directly here to match specific column name requirement easily
-            # OR assume parser works.
-            # Let's use pandas as in the user's snippet in Step 71.
-            import pandas as pd
-             # Pandas가 엑셀 파일을 열어서 메모리 상의 표인 DataFrame으로 변환함.
-            # df = pd.read_excel(metadata.file_path) if file_extension in ['.xlsx', '.xls'] else pd.read_csv(metadata.file_path, encoding="utf-8-sig")
-            if file_extension in ['.xlsx', '.xls']:
-                df = pd.read_excel(metadata.file_path)
-            else:
-                try:
-                    df = pd.read_csv(metadata.file_path, encoding="utf-8-sig")
-                except UnicodeDecodeError:
-                    df = pd.read_csv(metadata.file_path, encoding="cp949")
-                    
-            if text_column not in df.columns:
-                # If column not found, and maybe user didn't specify one?
-                # If dataframe has columns, use the first one as fallback if single column?
-                 raise HTTPException(status_code=400, detail=f"Column '{text_column}' not found in file. Available columns: {list(df.columns)}")
-            
-            # Pandas 사용자가 지정한 컬럼만 쏙 뽑아서 "파이썬 리스트"로 만듦. 
-            # 리스트 값이 전부 NAN 일 경우 번역 API에서 터질 수 있으므로 코드 수정 + 방어 코드
-            texts = (
-                df[text_column]
-                .dropna()
-                .astype(str)
-                .str.strip()
-                .tolist()
-            )
-            # 디버깅 용 코드 한 놈만 걸려라
-            logger.info(f"File:{metadata.filename}")
-            logger.info(f"columns: {df.columns.tolist()}")
-            logger.info(f"Text rows: {len(texts)}")
+        if file_extension in ['.xlsx', '.xls']:
+            df = pd.read_excel(metadata.file_path)
+        else:
+            try:
+                df = pd.read_csv(metadata.file_path, encoding="utf-8-sig")
+            except UnicodeDecodeError:
+                df = pd.read_csv(metadata.file_path, encoding="cp949")
+                
+        if text_column not in df.columns:
+            # If column not found, raise clearer error
+             raise HTTPException(status_code=400, detail=f"Column '{text_column}' not found in file. Available columns: {list(df.columns)}")
+        
+        # Pandas 사용자가 지정한 컬럼만 쏙 뽑아서 "파이썬 리스트"로 만듦. 
+        # 리스트 값이 전부 NAN 일 경우 번역 API에서 터질 수 있으므로 코드 수정 + 방어 코드
+        texts = (
+            df[text_column]
+            .dropna()
+            .astype(str)
+            .str.strip()
+            .tolist()
+        )
+        # 디버깅 용 코드
+        logger.info(f"File:{metadata.filename}")
+        logger.info(f"columns: {df.columns.tolist()}")
+        logger.info(f"Text rows: {len(texts)}")
 
-            if not texts:
-                raise HTTPException(status_code=400, detail="No valid text rows found")
+        if not texts:
+            raise HTTPException(status_code=400, detail="No valid text rows found")
 
         # 4. Translate
         if not texts:

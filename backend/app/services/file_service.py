@@ -7,7 +7,8 @@ from typing import Dict
 from fastapi import UploadFile
 from app.core.config import settings
 from app.models.file import FileMetadata
-from app.utils.file_parser import ExcelParser
+from app.models.file import FileMetadata
+import pandas as pd
 
 
 class FileService:
@@ -33,10 +34,27 @@ class FileService:
             content = await file.read()
             buffer.write(content)
         
-        # Parse Excel to get metadata
-        parser = ExcelParser(str(file_path))
-        sheet_names = parser.get_sheet_names()
-        row_count, column_count = parser.get_dimensions()
+        # Parse File to get metadata using Pandas
+        try:
+            if file_extension in ['.xlsx', '.xls']:
+                xl = pd.ExcelFile(file_path)
+                sheet_names = xl.sheet_names
+                df = pd.read_excel(file_path)
+            else:
+                sheet_names = ['Sheet1']
+                try:
+                    df = pd.read_csv(file_path, encoding='utf-8-sig')
+                except UnicodeDecodeError:
+                    df = pd.read_csv(file_path, encoding='cp949')
+            
+            row_count = len(df)
+            column_count = len(df.columns)
+        except Exception as e:
+            # If parsing fails, we might want to log it and raise proper error
+            # For now, let's ensure we don't return partial invalid metadata
+            # But the file is already saved.
+            # Let's raise value error as in the usages
+            raise ValueError(f"Failed to parse file: {str(e)}")
         
         # Create metadata
         metadata = FileMetadata(

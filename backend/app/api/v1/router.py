@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import upload, translation
 
+# FASTAPI 구조
 # Create API router
 api_router = APIRouter()
 
