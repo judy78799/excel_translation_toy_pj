@@ -1,6 +1,7 @@
 import httpx
 import asyncio
 from typing import List
+import html
 from app.core.config import settings
 
 
@@ -85,7 +86,7 @@ class ExternalAPIService:
                 
                 data = response.json()
                 translated = data["data"]["translations"][0]["translatedText"]
-                return translated
+                return html.unescape(translated)
         
         except httpx.HTTPError as e:
             # Fallback to mock if API fails
