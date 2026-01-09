@@ -3,11 +3,11 @@ from app.models.upload import FileUploadResponse, TranslationResult
 from app.services.file_service import FileService
 from app.services.translation_service import TranslationService
 from app.services.external_api_service import ExternalAPIService
-from app.utils.file_parser import ExcelParser
 from app.core.config import settings
 from pathlib import Path
 import time
 import logging
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -19,6 +19,7 @@ translation_service = TranslationService(api_service)
 
 @router.post("/", response_model=FileUploadResponse)
 async def upload_and_translate(
+    raise RuntimeError("IF YOU SEE THIS, THIS FILE IS EXECUTING") 
     file: UploadFile = File(...),
     source_lang: str = Query("ko", pattern="^[a-z]{2}$"),
     target_lang: str = Query("en", pattern="^[a-z]{2}$"),
@@ -92,6 +93,10 @@ async def upload_and_translate(
                 .str.strip()
                 .tolist()
             )
+            # 디버깅 용 코드 한 놈만 걸려라
+            logger.info(f"File:{metadata.filename}")
+            logger.info(f"columns: {df.columns.tolist()}")
+            logger.info(f"Text rows: {len(texts)}")
 
             if not texts:
                 raise HTTPException(status_code=400, detail="No valid text rows found")
