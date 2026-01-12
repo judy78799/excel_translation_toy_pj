@@ -17,3 +17,10 @@ api_router.include_router(
     prefix="/translate",
     tags=["Translation"]
 )
+
+from app.api.v1.endpoints import dataset
+api_router.include_router(
+    dataset.router,
+    prefix="/dataset",
+    tags=["Dataset Generation"]
+)

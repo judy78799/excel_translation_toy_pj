@@ -59,6 +59,12 @@ async def startup_event():
     """Run on application startup"""
     print(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     print(f"Mock translation mode: {settings.USE_MOCK_TRANSLATION}")
+    
+    # Initialize DB tables
+    from app.core.database import Base, engine
+    from app.models import dataset  # Import models to register them
+    Base.metadata.create_all(bind=engine)
+    print("Database tables created.")
 
 
 @app.on_event("shutdown")

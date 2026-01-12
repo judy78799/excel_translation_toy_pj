@@ -59,3 +59,21 @@ class TranslationService:
     ) -> List[TranslationItem]:
         """Translate an Excel column"""
         return await self.translate_texts(column_data, source_lang, target_lang)
+
+    async def perform_back_translation(
+        self,
+        translated_texts: List[str],
+        source_lang: str,
+        target_lang: str
+    ) -> List[str]:
+        """
+        Perform back-translation (Target -> Source)
+        Used for Quality Estimation
+        """
+        # Swap source/target
+        back_translated = await self.api_service.translate_batch(
+            translated_texts, 
+            source_lang=target_lang,  
+            target_lang=source_lang
+        )
+        return back_translated
