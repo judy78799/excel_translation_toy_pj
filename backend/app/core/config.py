@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     # Rate limiting
     MAX_BATCH_SIZE: int = 100  # Max texts to translate in one batch
     REQUEST_TIMEOUT: int = 30  # seconds
+
+    # Database : Async SQLAlchemy + asyncpg로 통일
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@db:5432/translation_db"
     
     class Config:
         env_file = ".env"
