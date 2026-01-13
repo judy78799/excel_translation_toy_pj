@@ -12,6 +12,22 @@
 node_modules/
 npm-debug.log*
 yarn-error.log*
-
 # cache
 .cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+# env
+.env
+backend/.env
+# 가상환경
+.venv/
+venv/
+env/
+# IDE 편집기 관련
+.idea/
+.vscode/
+*.iml
+# 시크릿 키 기록용 파일
+secrets.txt    
